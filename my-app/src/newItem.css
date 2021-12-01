@@ -1,0 +1,28 @@
+
+
+#imagePlay{
+    border-radius: 50%;
+    position: relative;
+    left:50%;
+    transform: translateX(-50%);
+    display: block;
+}
+
+.description{
+    position: relative;
+    left:50%;
+    transform: translateX(-50%);
+    margin-bottom: 30px;
+    display: block;
+    font-size: 18px;
+   
+}
+
+#description{
+    resize: none;
+    width:75%;
+    height: 120px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    
+}
