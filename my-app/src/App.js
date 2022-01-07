@@ -1,219 +1,430 @@
-import logo from './logo.svg';
 import './App.css';
 import React from 'react';
-import {BrowserRouter as Router, Route, Link,Switch} from "react-router-dom";
+import {BrowserRouter as Router, Route, Link,Switch, Redirect} from "react-router-dom";
 import axios from 'axios';
-
-
-
 import Movie from './Movie';
-
-
-
+import Item from "./item";
+import Search from './search';
 
 import Background from './icons/background.gif';
-import settingIcon from './icons/setting.png';
+import settingIcon from './icons/preview.svg';
+import Default_empty from './icons/empty.jpg';
 
-
-import Xmyrz from './BGM/xmyrz.mp3';
-import Xmyrz1 from './BGM/xmyrz1.mp3';
-
-
-
-
-
-const BGM_Mode = ['顺序循环','单曲循环','随机播放'];
-const BGM = [Xmyrz,Xmyrz1];
 
 class App extends React.Component{
 
 
-constructor(){
-    super();
-    this.previousBGM = '';
-    this.BGM = Xmyrz;
-    this.currentBGMMode = '顺序循环';
-    this.state = {
-        login:false
-    }
-}    
-
-// Memorizing user's login status unless they log out or close browser
-tokenVerify = () =>{
-    if(localStorage.getItem('Token'))
-    {
-        if (!this.state.login)
-            this.setState({
-                login:true
-            })
+    constructor(){
+        super();
+        this.newItem_image = "";
+        this.newItem_video = "";
+        
     }    
-}
 
-// send Email and password to backend to check if account/password match,if so, login and store token ;
-login = () =>{
-    let Email  = document.getElementById('email').value
-    axios.post('http://localhost:3001/login',
-        {Email:document.getElementById('email').value,Password:document.getElementById('password').value})
-        .then(res=>{
-                this.setState({login:true},
-                    function(){localStorage.setItem('Email',Email);
-                              localStorage.setItem('Token',res.data)
+    
+//Signup, Signin and logout function implementation
+    signup = async () =>{
+        var username = document.getElementById('signup_username').value
+        var password = document.getElementById('signup_password').value
+        var confirm = document.getElementById('signup_confirm').value
+        if(confirm !== password){alert("Two Passwords don't match");return;}
+        await axios.post('http://localhost:3001/signup',{username:username,password:password})
+             .then(res=>{console.log('res');console.log(res);})
+             .catch(err=> {console.log('err');console.log(err)})
+
+        document.getElementById('cover').setAttribute('onclick',"");
+        document.getElementById('cover').removeAttribute('class','show');
+        document.getElementById('Sign_up_box').style.display = "none";
+       
+    }
+
+    signin = async() =>{
+        var username = document.getElementById('signin_username').value
+        var password = document.getElementById('signin_password').value
+        var token_and_username = await axios.post('http://localhost:3001/signin',{username:username,password:password})
+             .then(res=>{console.log('res');console.log(res);return res.data})
+             .catch(err=> {console.log('err');console.log(err.response);
+                if(err.response.status === 404){alert('There is something wrong in the server.Please try it later')}
+                else if (err.response.status === 403) {alert("Account doesn't exist or username/password doesn't match")}
+                return false
             })
-                }
-                ///callback for failure login
-                ,()=> document.getElementById('failedLogin').style.display= 'block')  
-        .catch(err=> console.log(err))    
-}
+        
+        if(token_and_username === false){return}
+        localStorage.setItem('token',token_and_username.token);
+        localStorage.setItem('uid',token_and_username.uid);
+        document.getElementById('cover').setAttribute('onclick',"");
+        document.getElementById('cover').removeAttribute('class','show');
+        document.getElementById('Sign_in_box').style.display = "none";
+        document.getElementById('Sign_in').style.display = "none";
+        document.getElementById('setting').style.display = "block";
+        document.getElementById('Account_user').innerHTML = 'User : ' +localStorage.getItem('uid');
+    }
 
-signup = () =>{
-    let Email  = document.getElementById('email').value
-    let Password = document.getElementById('password').value
-    axios.post('http://localhost:3001/signup',
-        {Email:Email,Password:Password})
-        .then(res=>{
+
+    signin_cover_cancel = () =>{
+        document.getElementById('cover').removeAttribute('class','show');
+        document.getElementById('Sign_in_box').style.display = "none";
+        document.getElementById('cover').setAttribute('onclick',"");
+    }
+
+    signin_interface = () =>{
+        console.log('dasdhak')
+        for (let input of document.getElementById("Sign_up_box").getElementsByTagName('input')){
+            input.value = "";
+        }
+        document.getElementById("Sign_up_box").style.display = "none";
+        document.getElementById("Sign_in_box").style.display = "flex";
+        document.getElementById('cover').setAttribute('class','show');
+        document.getElementById('cover').style.height = document.getElementById('root').scrollHeight + "px";
+        document.getElementById('cover').onclick = this.signin_cover_cancel;
+    }
+
+    signup_cover_cancel = () =>{
+        document.getElementById('cover').removeAttribute('class','show');
+        document.getElementById('Sign_up_box').style.display = "none";
+        document.getElementById('cover').setAttribute('onclick',"");
+    }
+
+    signup_interface = () =>{
+        for (let input of document.getElementById("Sign_in_box").getElementsByTagName('input')){
+            input.value = "";
+        }
+        document.getElementById("Sign_in_box").style.display = "none";
+        document.getElementById("Sign_up_box").style.display = "flex";
+        document.getElementById('cover').style.height = document.getElementById('root').scrollHeight + "px";
+        document.getElementById('cover').onclick = this.signup_cover_cancel;
+    }
+
+    logout = ()=>{
+        localStorage.clear();
+        window.location.replace('http://localhost:3000');
+    }
+
+// Upload new Movie function implementation
+    upload_interface = () =>{
+        document.getElementById('Upload_box').style.display = "block";
+        document.getElementById('cover1').setAttribute('class','show');
+        document.getElementById('cover1').style.height = document.getElementById('root').scrollHeight + "px";
+    }
+
+    upload_cover_cancel = () =>{
+        document.getElementById('cover1').removeAttribute('class','show');
+        document.getElementById('Upload_box').style.display = "none";
+    }
+
+    image_change = (e) =>{
+        let image = e.target.files[0]
+        console.log(image === undefined)
+        if (image !== undefined){
+            document.getElementById('chosen_image').value = (image.name);
+            document.getElementById('preview').src = URL.createObjectURL(image);
+            this.newItem_image = image;}
+        else{
+            document.getElementById('chosen_image').value = "";
+            if (document.getElementById('imageUrl').val === undefined){
+                document.getElementById('preview').src = Default_empty;
+            }
+        }
+        
+    }
+
+    image_error = (e) =>{
+        console.log(e.target);
+    }
+
+    video_change = (e) =>{
+        let video = e.target.files[0];
+        if (video !== undefined){
+            document.getElementById('chosen_video').value = video.name;
+            this.newItem_video = video;
+        }
+        else{
+            document.getElementById('chosen_video').value = "";
+        }
+    }
+
+    chosen_url = async() =>{
+        let url = document.getElementById('imageUrl').value;
+        if(url === ""){
+            return;
+        }
+        document.getElementById('preview').src = url;
+        let blob = await this.urltoBlob(url)
+        this.newItem_image = blob 
+    }
+    
+
+    upload_complete = () =>{
+        
+        if(this.newItem_image === "" || this.newItem_video === "" || document.getElementById('new_movie_name').value === ""){
+            alert('error');
+            return;
+        }
+        var data = new FormData();
+        data.append('video', this.newItem_video);
+        data.append('image', this.newItem_image);
+        data.append('name', document.getElementById('new_movie_name').value);
+        axios.post('http://localhost:3001/uploadItem',data,
+            {
+            // Show upload progress
+            onUploadProgress: (progressEvent) => 
+                {
+                    if (progressEvent.lengthComputable) 
+                    {
+                        console.log(progressEvent.loaded + ' ' + progressEvent.total);
+                        if(this.newItem_video !== ""){
+                            document.getElementById('upload_progress_cover').style.visibility = "hidden";
+                            var progressBar = document.getElementById('upload_progress')
+                            var progress = Math.round(100*(progressEvent.loaded/progressEvent.total)) + "%";
+                            progressBar.value = progress;
+                            progressBar.style.width = progress;
+                                                     }
+                    }
+                }
+            }
+        )
+            .then(res=>{alert("finished");
+                    document.getElementById('upload_progress_cover').style.visibility = "visible";
+                    var progressBar = document.getElementById('upload_progress');
+                    progressBar.style.width = "0";
+                    progressBar.value="";
+                    document.getElementById('new_movie_name').value = "";
+                    document.getElementById('imageUrl').value = "";
+                    document.getElementById('chosen_image').value = "";
+                    document.getElementById('chosen_video').value = "";
+                    this.upload_cover_cancel();
+                })
+            .catch(err=>{alert('error' + err)
+                    document.getElementById('upload_progress_cover').style.visibility = "visible";
+                    var progressBar = document.getElementById('upload_progress');
+                    progressBar.style.width = "0";
+                    progressBar.value="";
+                    document.getElementById('new_movie_name').value = "";
+                    document.getElementById('imageUrl').value = "";
+                    document.getElementById('chosen_image').value = "";
+                    document.getElementById('chosen_video').value = "";
+                    this.upload_cover_cancel();
+            })
+
+
+         
+    }
+
+     urltoBlob = async (url)=> {
+        // convert base64 to raw binary data held in a string
+        // doesn't handle URLEncoded urls - see SO answer #6850276 for code that does this
+        var byteString;
+        var dataurl = url;
+    
+        try{
+            byteString = atob(dataurl.split(',')[1]);}
+        catch(error){
+             dataurl = await fetch(url)
+            .then(res => res.blob())
+            .then(blob => new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve(reader.result)
+            reader.onerror = reject
+            reader.readAsDataURL(blob)
+            })).then(res=> res)
             
-            if(res.data.length !== 0){
-                alert(res.data + '\n' + 'This is your account information:' 
-                    +"\n" + 'Email : ' + Email
-                    +"\n" + 'Password : ' + Password)
-                
-                document.getElementById('email').value = ''
-                document.getElementById('password').value = ''    
-            }
+            byteString = atob(dataurl.split(',')[1]);
+        }
+        
+        // separate out the mime component
+        var mimeString = dataurl.split(',')[0].split(':')[1].split(';')[0];
+        console.log("m :\n" +mimeString)
+        // write the bytes of the string to an ArrayBuffer
+        var ab = new ArrayBuffer(byteString.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+        return new Blob([ab], {type: mimeString});
     
-        })
-        .catch(err=> console.log(err))    
-
-
-}
-
-displayChangeSettingOptions = (event,elem) =>{
-  
-    if(event.currentTarget !== event.target) return
-    
-
-    let q = document.getElementById(elem);
-    if (q.style.display ==='none'){
-        q.style.display = 'flex';
-        q.style.flexDirection='column';
     }
-    else
-        q.style.display = 'none';
-
-}
-
-BGMChange = (val) => (event) =>{
-   
-    if(this.previousBGM !== ""){
-        this.previousBGM.style.background= "white";
-        this.previousBGM = event.currentTarget;}
-    else{
-        document.getElementById('BGM_0').style.background = 'white';
-        this.previousBGM = event.currentTarget;
-    }
-    this.BGM = val;
-    document.getElementById('BGM').src = this.BGM;
-    document.getElementById('BGM').play();
-    event.currentTarget.style.background='#E1E1E1';
-    document.getElementById('BGMSetting').childNodes[0].nodeValue = 'BGM : (' + event.currentTarget.innerHTML + ')'; 
-    console.log(this.BGM)
-}
-
-BGMModeChange = () =>{
-    
-    if (this.currentBGMMode === BGM_Mode[0])
-        this.currentBGMMode = BGM_Mode[1]
-    else if (this.currentBGMMode === BGM_Mode[1])
-        this.currentBGMMode = BGM_Mode[2]
-    else
-        this.currentBGMMode = BGM_Mode[0]
-
-    document.getElementById('BGMMode').innerHTML = 'BGM_Mode : ' + this.currentBGMMode;
 
 
-}
-
-playNext = () =>{
-    let number = 0;
-    if (this.currentBGMMode === '顺序循环')
-        {   
-            for(let i=0;i<2;i++){
-                if(this.BGM === BGM[i]){
-                    if(i === 1){
-                        this.BGM = BGM[0];
-                        number = 0;
-                    }
-                    else
-                       {
-                        this.BGM = BGM[i+1];
-                        number = i+1;
-                    }
-
-                    break
+    componentDidMount = ()=>{
+        if(localStorage.getItem('token')!== null){
+            axios.post('http://localhost:3001/tokenVerify',{username:localStorage.getItem('uid'),token:localStorage.getItem('token')})
+                 .then(res=>{
+                    if(res.data === true){
+                    document.getElementById('Sign_in').style.display = 'none';
+                    document.getElementById('setting').style.display = 'block';
+                    document.getElementById('Account_user').innerHTML = "User : " + localStorage.getItem('uid');
                 }
-            }
+                 })
+                 .catch(err=>{console.log(err)})
         }
-
-    else if (this.currentBGMMode === '随机播放'){
-        let randomSongNumber = Math.floor(Math.random()*2);
-        while(this.BGM === BGM[randomSongNumber]){
-            randomSongNumber = Math.floor(Math.random()*2);
-        }
-        this.BGM = BGM[randomSongNumber];
-        number = randomSongNumber;
     }
 
-    else{
-        document.getElementById('BGM').play();
-        return;
+    
+
+    search = () =>{
+        var searchContent = document.getElementById('searchContent').value;
+        console.log(searchContent)
+        window.location.href = "http://localhost:3000/search?content=" + searchContent;
+
     }
 
-    if(this.previousBGM !== ""){
-        this.previousBGM.style.background= "white";
-        }
-    else{
-        document.getElementById('BGM_0').style.background = 'white';
+
+    
+//--------------------------------------------------------------------------------------------
+    render(){
+        console.log('render1')
+        return(
+            <Router >
+                <div id='cover' ></div> 
+                <div id='cover1' ></div> 
+            
+            
+                <div id="Sign_in_box">
+                    <div id="Sign_in_Background">
+                        <img src={Background} ></img>
+                        <h2> Inception</h2>
+                    </div>
+                    <input  id='signin_username' type='text' placeholder='Username or Email' className='Sign_in'></input>
+                    
+                    <input id='signin_password' type='password' placeholder='Password' className='Sign_in'></input>
+                    
+                    <button className='Sign_in' onClick={this.signin}> Sign in</button>
+
+                    <div className='Signup_ForgetPassword'>
+                        <span> Forgot Password?</span>
+                        <span onClick={this.signup_interface}> Sign up</span>
+                    </div>
+                </div>
+
+
+
+                <div id="Sign_up_box">
+                    <div id="Sign_up_Background">
+                        <img src={Background} ></img>
+                        <h2> Inception</h2>
+                    </div>
+                    <input id='signup_username' type='text' className='Sign_up' placeholder='Username or Email' ></input>
+                    
+                    <input id='signup_password' type='password' className='Sign_up' placeholder='Password' ></input>
+
+                    <input id='signup_confirm' type='password' className='Sign_up' placeholder='Confirm Password' ></input>
+                    
+                    <button className='Sign_up' onClick={this.signup}> Sign up</button>
+
+                    <div className='Sign_in'>
+                        <span>Already have account?</span>
+                        <span id="Signup_Signin" onClick={this.signin_interface}> Sign in</span>
+                    </div>
+                </div>
+
+
+                <div id='Upload_box'>
+                    <div id="preview_wrapper">
+                        <button id='closeX_1'
+                            onClick={this.upload_cover_cancel}>
+                            X
+                        </button>
+                        <img id="preview" src={Default_empty} onError={this.image_error}/>
+                    </div>
+                    <div id="Upload_options">
+
+                        <div>
+                            <input id="new_movie_name"  type="text" placeholder='Enter Movie Name *'/>
+                        </div>
+                        <div>
+                            <input type='text' id="chosen_image" disabled placeholder='Choose an Image File'/>
+                            <label>Select an image
+                                <input id="image_select" type='file' onChange={this.image_change} accept='image/*'/>
+                            </label>
+                        </div>
+
+                        <div>
+                            <input id="imageUrl" placeholder="Enter a Link and Click Button" type='text'/>
+                            <label onClick={this.chosen_url}>Use URL Image </label>
+                        </div>
+
+                        <div>
+                            <input type='text' id="chosen_video" disabled placeholder='Choose an Video File *'/>
+                            <label>Select a Video 
+                                <input id="video_select" type='file' onChange={this.video_change} accept='video/*'/>
+                            </label>
+                        </div>
+                        <div>
+                            <input id='upload_progress' disabled/>
+                            <span id="upload_progress_cover"> Upload progress </span>
+                        </div>
+                        
+
+                    </div>
+                    <button id="upload_complete" onClick={this.upload_complete}> upload </button>
+                </div>
+
+                <div id='settingbar'> 
+                        <h2 id='settingHeadline'> Account </h2>
+
+                        <button id='closeX'
+                            onClick={()=>{document.getElementById('settingbar').removeAttribute('class');
+                                        document.getElementById('cover').removeAttribute('class')}}>
+                            X
+                        </button>
+                        
+                        <div id='settingBody'>
+                            <div  className='settingOptions' id='Account_user' > </div>
+                            <button id='upload' onClick={this.upload_interface}> Upload </button>
+                                            
+                            
+                            <div  className='settingOptions' id='logout' onClick={this.logout}>
+                                            logout
+                            </div>
+                        </div> 
+                    </div>
+                    <img id='setting' src={settingIcon} alt='Exclusive Free User Icon by Stockio.com'
+                            onClick={()=>{document.getElementById('settingbar').setAttribute('class','show');
+                            document.getElementById('cover').setAttribute('class','show');
+                            document.getElementById('cover').style.height = document.getElementById('root').scrollHeight + "px";
+                            }}/>
+                
+                    <div id='headline'>
+                        <span id="logo" ><Link to='/' style={{textDecoration:'none',color:'white'}}>Inception</Link></span>
+                        <div id='search_box'>
+                            <div id='search_container'>
+                                <input maxLength={50} id='searchContent' placeholder='Search Movie'/>
+                                <svg id='searchIcon' onClick={this.search}>
+                                    <circle cx="12" cy="18" r={Math.sqrt(98)} stroke="white" stroke-width="3" fill='#B3ACAC'/>
+                                    <line x1="19" y1="25" x2="29" y2="35" style={{stroke:'white',strokeWidth:'5'}} />
+                                </svg>
+                            </div>
+                        </div>
+                        <button id = "Sign_in" onClick={this.signin_interface}>Sign in</button>
+                    </div>
+                      
+
+                <div id='content_box'>
+                    <div id='navbar'>
+                                <a href='/Movie' className='Options'> Movies</a>
+                    </div> 
+                    <div id="total_content">
+                            <Switch>
+                                
+                                <Route exact path="/Movie" component={Movie}></Route>
+                            
+                                <Route exact path='/play' component={Item}></Route>
+
+                                <Route exact path='/search' component={Search}></Route>
+                            
+                            </Switch>    
+                    </div>
+                </div>
+            </Router>
+        )
     }
-    
-    this.previousBGM = document.getElementById('BGM_' + number);
-    document.getElementById('BGM_' + number).style.background='#E1E1E1';
-    document.getElementById('BGMSetting').innerHTML = 'BGM : (' + document.getElementById('BGM_' + number).innerHTML + ')'; 
-    
-    
-    document.getElementById('BGM').src = this.BGM;
-    document.getElementById('BGM').play();
-
-}
 
 
-setCategory = (e) =>{
-    localStorage.setItem('Category',e.currentTarget.innerHTML);
-    Array.from(document.getElementsByClassName('Options')).forEach((each)=>each.style.opacity=0.5);
-    e.currentTarget.style.opacity=1;
-
-}
-
-logout = async() =>{
-    this.setState({
-        login: await new Promise((resolve,reject)=>{
-            localStorage.clear();resolve(false)})
-    },()=>window.location.href="http://www.localhost:3000")
-}
-
-BGMVisibility = (e) =>{
-    
-    document.getElementById('BGM').style.visibility = e.currentTarget.innerHTML === 'H'? 'visible': 'hidden'
-    e.currentTarget.innerHTML = e.currentTarget.innerHTML === 'H' ? 'V' : 'H' 
-
-}
 
 
-render(){
+//this.tokenVerify()
 
-console.log(this.state.login)
-this.tokenVerify()
-
-if(!this.state.login){
+/* if(!this.state.login){
     return (
         <div style={{
             position:'absolute',
@@ -249,84 +460,7 @@ if(!this.state.login){
             </div>
         </div>
     )
-}
-
-else return(
-<Router>
-    <div id='cover'></div> 
-    <div id="whole_page">
-        <div id='settingbar'> 
-            <h2 id='settingHeadline'> Setting </h2>
-        
-            <button id='closeX'
-                onClick={()=>{document.getElementById('settingbar').removeAttribute('class');
-                            document.getElementById('cover').removeAttribute('class')}}>
-            X</button>
-            
-            <div id='settingBody'>
-                <div className='settingOptions' id='BGMSetting' onClick={(e)=>{this.displayChangeSettingOptions(e,'BGMContent')}}>
-                                BGM : 夏目友人帐
-                    <span onClick={(e)=>this.BGMVisibility(e)} id='BGMVisibility' style={{textAlign:'center',borderRadius:'50%',border:'1px solid black',background:'white',width:'25px',height:'25px',right:'2px',position:'absolute',zIndex:'1'}}>
-                        V
-                    </span>    
-                </div>    
-                
-                <div id='BGMContent' style={{display:'none'}}>
-                                <div id='BGM_0' style={{background:'#E1E1E1'}} className='BGMItems' onClick={(e)=>this.BGMChange(Xmyrz)(e)}> 夏目友人帐 </div>
-                                <div id='BGM_1' className='BGMItems' onClick={(e)=>this.BGMChange(Xmyrz1)(e)}> 夏目友人帐1 </div>      
-                </div> 
-                <div className='settingOptions' id='BGMMode' onClick={this.BGMModeChange}>
-                                BGM_Mode : {this.currentBGMMode}
-                </div>    
-                
-                <div  className='settingOptions' id='logout' onClick={this.logout}>
-                                logout
-                </div>
-            </div> 
-        
-        
-        
-        </div>
-        <div id='headline'>
-            <img id='setting' src={settingIcon} alt='The setting icon By Pixel Perfect'
-                 onClick={()=>{document.getElementById('settingbar').setAttribute('class','show');
-                 document.getElementById('cover').setAttribute('class','show')}}/>
-            <Link to='/' style={{padding:'0',margin:'0',textDecoration:'none'}}><h1 id="logo" >Inception</h1></Link>
-            <audio id="BGM" controls onEnded={this.playNext}>
-                    <source src={Xmyrz} type='audio/mp3' ></source>
-            </audio>  
-        </div>
-        
-        <div id='navbar'>
-            
-            <Link to='/Movie' className='Options' onClick={(e)=>this.setCategory(e)}> Movie</Link>
-            
-            
-            <Link className='Options'><span> New Tag <span style={{fontWeight:'bold'}}>+</span></span></Link>
-        </div>    
-         
-        <Switch>
-
-           
-            <Route path="/Movie" render={()=> <Movie  logout={()=>this.logout(this.callbackOfLogout)} />}></Route>
-            
-          
-            <div id="body" >
-            </div>
-            
-        </Switch>    
-        
-    </div>
-    
-</Router>
-)
-
-
-
-}
-
-
-
+}*/
 
 
 }

@@ -1,50 +1,340 @@
 
 html{
-
+ 
   --hello:#c3073f;
-
+  --b:#99aaff;
+}
+html,body{
+  min-height: 100%;
+  margin: 0;
+  pad: 0;
+}
+body{
+  background: black;
+  
+  overflow-x: hidden;
+}
+#root{
+ height: 100%;
+ width: 100%;
+ top:0;
+ left:0;
+ padding: 0;
+ margin: 0;
+ position: absolute;
 }
 
-
-#login{
-z-index:2; 
-position: absolute;
-background: white;
-width:500px;
-height:400px;
-left:50%;
-top:20px;
-transform: translateX(-50%);
-display: flex !important;
-flex-direction: column !important;
-align-items: center !important;
-justify-content: center !important;
-display: none;
-}
-
-
-
-
-
-
-
-
- #whole_page{
-   display: flex;
-   flex-direction: column;
+/* Sign in box*/
+ #Sign_in{
+   position: absolute;
+   top:20px;
+   right: 10px;
+   color:white;
+   z-index: 996;
+   font-size: 20px;
+   border: none;
+   background: black;
+   cursor: pointer;
  }
+ #Sign_in:hover{
+    border:1px solid white;
+    background: white;
+    color: black;
+    border-radius: 25px;
+ }
+ #Sign_in_box{
+  background: white;
+  border: 3px solid black;
+  position:absolute;
+  min-width: 400px;
+  width: 20%;
+  max-width: 600px;
+  min-height: 400px;
+  height:60%;
+  max-width: 500px;
+  top:110px;
+  left: 50%;
+  display: none;
+  z-index: 1000;
+  transform: translateX(-50%);
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+ }
+   #Sign_in_box #Sign_in_Background{
+     position: relative;
+     width: 50%; 
+     height:100px;
+   }
+    #Sign_in_box #Sign_in_Background img{
+      width: 100%;
+      height:100%;
+      border-radius: 50%;
+    }
+    #Sign_in_box #Sign_in_Background h2{
+      position:absolute;
+      top:50%;
+      left: 50%;
+      transform: translateX(-50%)  translateY(-50%);
+      color:white;
+      padding: 0;
+      margin: 0;
+      font-family: 'Brush Script MT';
+    }
+   #Sign_in_box .Sign_in{
+    height:30px;
+    width: 70%;
+    box-sizing: border-box;
+   }
+    #Sign_in_box button.Sign_in{
+    cursor: pointer;
+    }
+   #Sign_in_box .Signup_ForgetPassword{
+    height:30px;
+    width: 70%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+   }
+    #Sign_in_box .Signup_ForgetPassword span{
+      cursor: pointer;
+    }
 
+
+/* Sign up box */
+  #Sign_up{
+      position: absolute;
+      top:10px;
+      right: 10px;
+      color:white;
+      z-index: 997;
+      font-size: 20px;
+      border: none;
+      background: black;
+      cursor: pointer;
+  }
+    #Sign_up:hover{
+       border:1px solid white;
+       background: white;
+       color: black;
+       border-radius: 25px;
+    }
+    #Sign_up_box{
+     background: white;
+     border: 3px solid black;
+     position:absolute;
+     min-width: 400px;
+     width: 20%;
+     max-width: 600px;
+     min-height: 400px;
+     height:60%;
+     max-width: 500px;
+     top:110px;
+     left: 50%;
+     display: none;
+     z-index: 1000;
+     transform: translateX(-50%);
+     flex-direction: column;
+     align-items: center;
+     justify-content: space-around;
+    }
+      #Sign_up_box #Sign_up_Background{
+        position: relative;
+        width: 50%; 
+        height:100px;
+      }
+       #Sign_up_box #Sign_up_Background img{
+         width: 100%;
+         height:100%;
+         border-radius: 50%;
+       }
+       #Sign_up_box #Sign_up_Background h2{
+         position:absolute;
+         top:50%;
+         left: 50%;
+         transform: translateX(-50%)  translateY(-50%);
+         color:white;
+         padding: 0;
+         margin: 0;
+         font-family: 'Brush Script MT';
+       }
+      #Sign_up_box .Sign_up{
+       height:30px;
+       width: 70%;
+       box-sizing: border-box;
+      }
+       #Sign_up_box button.Sign_up{
+       cursor: pointer;
+       }
+      #Sign_up_box .Sign_in{
+       height:30px;
+       width: 70%;
+       display: flex;
+       flex-direction: row;
+       justify-content: space-between;
+      }
+       #Sign_up_box .Sign_in #Signup_Signin{
+         cursor: pointer;
+       }
+
+
+
+      #Upload_box{
+        background: white;
+        border: 3px solid black;
+        position:absolute;
+        min-width: 300px;
+        width: 30%;
+        max-width: 750px;
+        min-height: 500px;
+        height:60%;
+        max-width: 750px;
+        top:110px;
+        left: 50%;
+        display: none;
+        z-index: 1002;
+        transform: translateX(-50%);
+      }
+
+      #Upload_box #preview_wrapper #closeX_1{
+        position: absolute;
+        top:0;
+        right:0px;
+        width: 30px;
+        height: 30px;
+        border: 1px solid white;
+        display: flex;
+        align-items: center;
+        font-weight: bold;
+        font-size: 28px;
+        color: white;
+        background: black;
+        cursor: pointer;
+        
+      }
+       
+        #Upload_box #preview_wrapper{
+          width: 100%;
+          height: 200px;
+          position: absolute;
+        }
+        #preview{
+          width: auto;
+          max-width: 100%;
+          height: 100%;
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          border-radius: 50%;
+        }
+        #Upload_box #Upload_options{
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          position: absolute;
+          top:200px;
+          bottom: 49px;
+          left:0;
+          right: 0;
+          box-sizing: border-box;
+        }
+        #Upload_box #Upload_options div{
+          padding: 0;
+          border: 5px solid #05F;
+          display: flex;
+          flex-direction: row;
+          box-sizing: border-box;
+          height: 45px;
+          position: relative;
+        }
+        #Upload_box input[type=text]{
+          float: left;
+          flex:3;
+          border:none;
+          text-decoration: none;
+          z-index: 2;
+        }
+        #Upload_box label{
+          flex:1;
+          position: relative;
+          float: right;
+          border-left: solid 5px brown;
+          background: bisque;
+          font-size: 16px;
+          text-align: center;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+        }
+        #Upload_box input[type=file]{
+          position:absolute;
+          opacity: 0;
+          font-size: 16px;
+          right:0;
+          cursor: pointer;
+        }
+        
+        #upload_complete{
+            position: absolute;
+            bottom:10px;
+            height: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50%;
+        }
+
+
+        #upload{
+          position: absolute;
+          right: 0;
+          bottom: 10%;
+          width: 70px;
+          height: 70px;
+          border-radius: 50%;
+          cursor: pointer;
+
+        }
+
+        #upload_progress{
+          width:0;
+          background: lightblue;
+          text-align: right;
+        }
+        #upload_progress_cover{
+          width:100%;
+          height:100%;
+          background: white;
+          z-index: 2;
+          position: absolute;
+          left:0;
+          visibility: visible;
+        }
+
+
+ 
+
+ 
   #cover{
     position:absolute;
-    height: 100vh;
-    width: 100vw;
+    width: 100%;
     background:black;
     opacity: 0.5;
     z-index:998;
     display: none;
-  
   }
   #cover.show{
+    display: block;
+  }
+  #cover1{
+    position:absolute;
+    width: 100%;
+    background:black;
+    opacity: 0.5;
+    z-index:1001;
+    display: none;
+  }
+  #cover1.show{
     display: block;
   }
   
@@ -125,57 +415,88 @@ display: none;
       background: #E1E1E1;
     }
   
-      .BGMItems{
-        position: relative;
-        left:10px;
-        width: 100%;
-        cursor: pointer;
-      }
-      
-      .BGMItems:hover{
-        background: #E1E1E1!important;
-      }
-  
-      #BGMVisibility:hover{
-        background: bisque !important;;
-      }
   #headline{
     padding: 0%;
     margin:0;
     background: black;
-    height: 70px;
+    height: 80px;
     width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    top:0;
+    left: 0;
+    position: fixed;
+    z-index: 2;
   }
     #setting{
-        position:absolute;
-        left:0;
+        display: none;
+        position:fixed;
+        right: 25px;
         top: 0px;
-        height:25px;
-        width:25px;
+        height:69px;
+        width:69px;
         background:white;
         font-weight: bold;
         font-size: 22px;
         cursor: pointer;
+        border-radius: 50%;
+        z-index: 997;
     }
-    #logo{
-      margin: 0;
-      margin-left: 10px;
+    #headline #logo{
+      position: absolute;
+      left: 10px;
+      top:0px;
       height:100%;
       font-family: 'Brush Script MT', cursive;
       font-size: 50px;
-      color: white;
+      width: fit-content;
+      font-weight: bold;
       }
     
-      #BGM{
-        position:absolute;
-        right: 0;
-        height:50px;
-        width:350px;
-      }
+
+    #headline #search_box #search_container{
+      position: absolute;
+      left: 300px;
+      height: 45px;
+      width:350px ;
+      top:50%;
+      box-sizing: border-box;
+      border-radius: 25px;
+      transform: translateY(-50%);
+      padding-left: 20px;
+      color:white;
+      font-size: 15px;
+      padding: 0;
+    }
+    #headline #search_box #search_container #searchContent{
+      height: 45px;
+      width:350px ;
+      background: rgb(179, 172, 172);
+      box-sizing: border-box;
+      border-radius: 25px;
+      padding-left: 20px;
+      padding-right: 45px;
+      color:white;
+      font-size: 15px;
+    }
+    #headline #search_box #searchContent::placeholder{
+      color:rgb(73, 73, 73);
+    }
+
+    #headline #search_box #search_container #searchIcon{
+      height: 100%;
+      position: absolute;
+      top:0;
+      right:10px;
+      width: 30px;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
     
+  #content_box{
+    position: absolute;
+    top:80px;
+    bottom: 0;
+    width: 100%;
+  }
   #navbar{
     height:40px;
     width: 100%;
@@ -185,6 +506,8 @@ display: none;
     flex-direction:row;
     align-items: center;
     padding: 0%;
+    margin: 0;
+    position: relative;
   }
 
    .Options{
@@ -204,21 +527,15 @@ display: none;
       cursor: pointer;
    }
 
-  #body{
+  
 
-      width:100%;
-      background:white;
-      display:flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      overflow-y: auto;
-      overflow-x: hidden;
+  #total_content {
+    position:absolute;
+    width: 100%;
+    height: calc(100% - 40px);
+
   }
 
-    .product {
-      width:300px;
-      height:250px;
-    }
-
-
+  
+  
+  

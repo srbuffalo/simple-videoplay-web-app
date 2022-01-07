@@ -1,252 +1,234 @@
+import "./Movie.css";
 import React from 'react';
-import './list.css';
-import Item from './item';
-import NewItem from "./newItem";
-import { Route, Link,Switch} from "react-router-dom";
-import image from './icons/giphy.gif';
-import image2 from './icons/Smiling Leo Perfect GIF.gif';
 import axios from 'axios';
-
+import {Link} from "react-router-dom";
+import Default_empty from "./icons/empty.jpg";
 
 
 export default class Movie extends React.Component{
 
-constructor(){
+    constructor(){
+        super();
+        this.pages = [];
+        this.numberofMovies = 0;
+        this.max_page = 1;
+        this.movie_list = [];
+        this.state = {
+            page : null,
+            first_load: true,
+            max_movies_in_one_page : 12
+        }
+    };
+    
+// Loading flow :  Mount => render => update information (getPage->getMovies->get movie_covers->get number of all movies ->modify page -> re-render to apply all update to pages)
 
-super();
 
-this.state = {
-    title:'Movie',
-    movieList : [],
-    loadData: true,
-    page:1,
-    scriptLoad:false,
-    hasCover:false,
-    hasVideo:false,
-    imageChoice:''
-}
-this.list = []
+    componentDidMount = async() =>{
+        console.log('mount')
+        this.setState({first_load:false})
+    }
 
-};
 
-getMovies = () =>{
-    console.log('here')
-    axios.post('http://localhost:3001/getMovies',{Email:localStorage.getItem('Email')})
-    .then(res =>
-        {
-            console.log(res)
-            if (res.data.length !== 0){
-                
-                this.setState(
-                    {movieList:Array.from(res.data,
-                                          function(each){return [each['Path'],each['Title'],each['addTime'],each['Email_Title']]})
-                                    .sort((a,b)=>(a[2]<b[2]?1:-1)),
-                     loadData: false,
-                     
-                    },()=>{//console.log(this.state.movieList);
-                    
-                        
-                    })
-                
+    componentDidUpdate = async()=>{
+        console.log('update_states')
+        var Query = await this.getPage();
+        if (Query['page'] != this.state.page){
+            
+            await this.getMovies(Query);
+            await this.modify_pages(await this.get_number_of_movies());
+            var page = Number(Query['page'])
+            if (page === 1){
+                document.querySelector('[name = "First"]').style.display = 'none'
+                document.querySelector('[name = "Prev"]').style.display = 'none'
             }
             else{
-
-                this.setState({
-
-                    movieList:[],
-                    loadData:false
-
-                })
+                document.querySelector('[name = "First"]').style.display = 'inline-block'
+                document.querySelector('[name = "Prev"]').style.display = 'inline-block'
+            }
+            
+            if (page === Math.max(this.max_page, 1)){
+                document.querySelector('[name = "Next"]').style.display = 'none'
+                document.querySelector('[name = "Last"]').style.display = 'none'
+            }
+            else{
+                document.querySelector('[name = "Next"]').style.display = 'inline-block'
+                document.querySelector('[name = "Last"]').style.display = 'inline-block'
             }
 
-    }
-        )
-    .catch(err=>console.log(err))
+            
 
-}
-
-reloadData = () =>{
-    this.setState({
-        loadData:true
-    })
-}
-
-checkMovie = (movie) =>{
-
-    localStorage.setItem('checkingMovie',movie)
-    
-    
-}
-
-// get specific icon from following source
-loadScript = () =>{
-    const script = document.createElement("script");
-    script.src = 'https://kit.fontawesome.com/a076d05399.js'
-    script.crossOrigin = 'anonymous'
-    script.async = true;
-    script.setAttribute('id','script_f')
-    document.body.appendChild(script);
-}
-
-componentDidMount = () =>{  //import fa fas icon, includes: trash, edit
-    
-    this.setState({
-        scriptLoad:true
-    },this.loadScript)
-
-}
-
-delete = (e,Title) =>{
-
-    e.preventDefault();
-    axios.post("http://localhost:3001/delete",{'Title':Title,'Email':localStorage.getItem('Email')})
-         .then(res=>{
             this.setState({
-                loadData : true
+                page : Number(Query['page'])
             })
-         })
-    
-    
-    
+        }
+        console.log('update_states_finish')
+
+    }    
+
+
+    getPage = async() =>{
+        console.log('getPage')
+        let value_key = window.location.search.substring(1).split('&').map(param => param.split('='))
+                              .reduce((values, [ key, value ]) => {values[ key ] = value;return values}, {})
+        value_key['page'] = value_key['page'] === undefined ? 1 : value_key['page']
+        return value_key;
+    }
+
+
+    getMovies =  async (Query) =>{
+        console.log('getMovies')
+        var page = Query['page'] !== undefined ? Query['page'] : 1
+        for(let elem of Array.from(document.querySelectorAll('[class = "Box"]')).slice(0,this.movie_list.length)){
+                elem.classList.add('fill_empty');
+                elem.firstChild.firstChild.src = "";
+                elem.firstChild.href = "";
+                elem.lastChild.firstChild.innerHTML = "";
+                elem.lastChild.href = "";
+            }
+        await
+        axios.get("http://localhost:3001/movies?page=" + page + "&num=" + this.state.max_movies_in_one_page)
+                .then(res =>{
+                        this.movie_list = Array.from(res.data,function(each){return {'MovieName': each['MovieName'],'ImagePath':each['FileName']+each['ImageFormat'],
+                                                                                    'Id':each['Id']}})
+                        this.page = page
+                        this.getMovie_covers()
+                            }
+                    )
+                .catch(err => {alert("There is an error to get movies" + err)})
+    }
+
+
+    getMovie_covers = async() =>{
+        console.log('Movie_covers')
+
+        var i = 0;
+        
+        for(let elem of Array.from(document.querySelectorAll('[class = "Box fill_empty"]')).slice(0,this.movie_list.length)){
+            elem.classList.remove('fill_empty');
+            elem.firstChild.firstChild.src = "http://localhost:3001/movies/covers?name=" + this.movie_list[i].ImagePath
+            elem.firstChild.href = "/play?id=" + this.movie_list[i].Id;
+            elem.lastChild.firstChild.href = "/play?id=" + this.movie_list[i].Id;
+            elem.lastChild.firstChild.innerHTML = this.movie_list[i].MovieName;
+            i += 1
+        }
+    }
+
+
+    get_number_of_movies = async() =>{
+        console.log('number_movies')
+        var number_of_movies = await axios.get('http://localhost:3001/getNumberofMovies')
+                    .then(res => {return res.data['number']}) 
+                    .catch(err=>console.log("Get number of movies err : " + err))
+        
+        return number_of_movies
+        
     }
     
-newItemOption = (checkOption)=>{
     
-    this.setState({
-        [checkOption.value] : checkOption.checked 
-    })
+    modify_pages = async (numberofMovies) =>{
+        console.log('modify')
+        let max_page = Math.ceil(numberofMovies / this.state.max_movies_in_one_page) 
+        if(max_page <= 9){
+                this.pages = Array.from(Array(max_page).keys()).map(each=>each+1);
+                this.numberofMovies = numberofMovies;
+                this.max_page = max_page;
+        }
+        else{
+            if (this.state.page <= 5){
+                    this.pages = Array.from(Array(9).keys()).map(each=>each+1);
+                    this.numberofMovies = numberofMovies;
+                    this.max_page = max_page;
+            }
 
-}
+            else if (this.state.page >= max_page-4){
+                    this.pages = Array.from(Array(9).keys()).map(each=>each+max_page-8);
+                    this.numberofMovies = numberofMovies;
+                    this.max_page = max_page;
+            }
+            else{
+                    this.pages = Array.from(Array(9).keys()).map(each=>each+this.state.page-4);
+                    this.numberofMovies = numberofMovies;
+                    this.max_page = max_page;
+            }
 
-imageChoice = (checkOption)=>{
-    this.setState({
-        imageChoice : checkOption.value 
-    })
-}
+        }   
+        console.log('modify_finish')
+        
+    }
 
-render(){
     
-    if(this.state.loadData)
-      setTimeout(this.getMovies,200)
-    
-return(
-    <div id='Body' >
-        <br/>
-        <br/>
-        <Switch>
-            <Route path='/movie/newItem' render={()=><NewItem reloadData={this.reloadData} logout={this.props.logout} hasCover={this.state.hasCover} hasVideo={this.state.hasVideo} imageChoice={this.state.imageChoice} />}></Route>
-            <Route path='/movie/item-:id' render={()=><Item reloadData={this.reloadData} movieList={this.state.movieList.map(element=>element[1])}/>}></Route>
-            <div style={{fontSize:'20px',display:'flex',flexDirection:'row',justifyContent:'left'}}>
+    showDefaultImage = (e) =>{
+        e.target.src = Default_empty;
+    }
+
+
+ //document.getElementById("11").src = "data:image;base64," + btoa((res.data._streams[1].data).reduce((data, byte) => data + String.fromCharCode(byte),''))
+    //<Link to = {{pathname:'/Movie/s',state:{video:"http://localhost:3001/audio&video_play?path=F:/harrypotter/xwz.mp4"}}} id = {"Link_of_Movie_Cover_" + String(each)}>
+//-----------------------------------------------------------------------------------
+
+
+
+
+   
+    render(){
+        return(
+                <div id='content' className="Movie" >
+                        <div id="main" >
+                            {
+                            (Array.from(Array(this.state.max_movies_in_one_page).keys())).map((each=>
+                                <div className="Box fill_empty">
+                                    <a>
+                                        <img src onError={(e)=>this.showDefaultImage(e)}></img>
+                                    </a>
+                                    <div className="movie_name_container"><a className="movie_name"></a></div>
+                                </div>
+                                ))
+                            }
+                        </div>
+                        <br/>
+                        <div id="bottom">
+                            <div>
+                                <Link to={{pathname:'/Movie'}}>
+                                    <button name="First" className="begin_and_end" > First </button>
+                                </Link>
+                                <Link to={{pathname:'/Movie',search:(Number(this.state.page) === 2)? "" : "?page=" + (Number(this.state.page)-1)}}>
+                                    <button name="Prev" className="begin_and_end" > Prev </button>
+                                </Link>
+                                
+                            </div>
+
+                            <div>
+                                { 
+                                this.pages.map((elem=>
+                                <Link to={{pathname:'/Movie',search:(elem === 1 ? "" : ("?page=" + elem))}}>
+                                    <button className="Pages"> {elem} </button>
+                                </Link>
+                                ))
+                                }
+                            </div>
+
+                            <div>
+                                <Link to={{pathname:'/Movie',search:"?page=" + (Number(this.state.page)+1)}}>
+                                    <button name='Next' className="begin_and_end" > Next </button>
+                                </Link>
+                                <Link to={{pathname:'/Movie',search:"?page=" + this.max_page}}>
+                                    <button name='Last' className="begin_and_end" > Last </button>
+                                </Link>    
+                            </div>
+                                
+                        </div>
+
+                        <div>
+                            <br></br>
+                            <br></br>
+                        </div>
+                       
+                </div>
                 
-
-            <button id='addButton' onClick={()=>(document.getElementById('newItemCover').style.display='block',document.getElementById('newItemOption').style.display='block')} style={{cursor:'pointer' ,zIndex:'21',position:'absolute',right:'20px',bottom:'10px',background:'white',display:'inline-flex',justifyContent:'center',alignItems:'center',fontSize:'30px',border:'solid 5px black',height:'50px',width:'50px'}}> + </button>
-                
-                
-                <i id='Edit' tabIndex='0' style={{cursor:'pointer' ,position:'absolute',right:'0',top:'0',fontSize:'30px'}} class='fas fa-edit' 
-                   onClick={()=>{let T = document.getElementById('edit'); T.style.display === "none"?T.style.display='block':T.style.display='none'}}
-                   onBlur= {()=>document.getElementById('edit').style.display='none'}>
-
-                    <ul id='edit'>
-                        <li> Edit </li>
-                        <li style={{color:'red'}}> Delete ! </li>
-                    </ul> 
-                </i>
-                
-
-                <ul id='currentList-column1' style={{listStyle:'none',flex:'1'}}>
-                    
-                    {
-                    this.state.movieList.slice(30*(this.state.page - 1),30*(this.state.page - 1) + 10).map((each,index)=>
-                        
-                    <Link style={{textDecoration:'none'}} to={'/movie/item-' +  (index + 1 + 30 * (this.state.page -1))  } onClick={()=>this.checkMovie(each[1])}> 
-                    
-                    <li className="list-element" >
-                        {(index+1 + 30 * (this.state.page -1)) + '. ' +each[1].slice(0,15)}
-                   
-                   <button className="fa fa-trash" onClick={(e)=>this.delete(e,each[1])}></button></li></Link>
-                    
-                    )}
-            
-                </ul>
-                <ul id='currentList-column2' style={{listStyle:'none',flex:'1'}}>
-                    
-                    {
-                    this.state.movieList.slice(30*(this.state.page - 1) + 10,30*(this.state.page - 1) + 20).map((each,index)=>
-                        
-                    <Link style={{textDecoration:'none'}} to={'/movie/item-' +  (index+ 1 + 30 * (this.state.page -1) + 10) } onClick={()=>this.checkMovie(each[1])}> <li className="list-element" >{(index+1 + 30 * (this.state.page -1) + 10) + '. ' +each[1].slice(0,15)} <button className="fa fa-trash"></button> </li> </Link>
-
-                    )}
-            
-                </ul>
-                <ul id='currentList-column3' style={{listStyle:'none',flex:'1'}}>
-                    
-                    {
-                    this.state.movieList.slice(30*(this.state.page - 1) + 20,30*this.state.page).map((each,index)=>
-                        
-                    <Link style={{textDecoration:'none'}} to={'/movie/item-' +  (index+ 1 + 30 * (this.state.page -1) + 20) } onClick={()=>this.checkMovie(each[1])}><li className="list-element"> {(index+1 + 30 * (this.state.page -1) + 20) + '. ' +each[1].slice(0,15)} <button className="fa fa-trash"></button></li></Link>
-
-                    )}
-            
-                </ul>
-            
-                
-                  
-              
-               
-            
-             <div className='Buttons'>   
-             <button id='Prev'  style={{opacity:this.state.page<=1?'0':'1'}} onClick={()=>this.setState({page:this.state.page-1},function(){
-                 document.getElementById("page").value = this.state.page
-             })}> Prev </button>
-             
-             <select onChange={()=>this.setState({page:document.getElementById('page').value})} id="page" style={{fontSize:'18px',opacity:this.state.movieList.length === 0 ?'0':'1'}}> 
-                {
-                    Array.from(Array(Math.ceil(this.state.movieList.length/30)).keys()).map(number=>
-                        <option value={number+1}>   page: {number + 1}           </option>
-                        
-                        )
-
-
-                }
-                
-            </select>
-             
-             <button id='Next' style={{opacity:Math.ceil(this.state.movieList.length/30)<=this.state.page?'0':'1'}} onClick={()=>this.setState({page:this.state.page+1},function(){
-                 document.getElementById("page").value = this.state.page
-             })}> Next </button>
-             
-             </div>
-            </div>
-        </Switch>
-
-        <div id='newItemCover'></div>
-        <div id='newItemOption'> 
-            <button id='newItemClose' onClick={()=>{return (document.getElementById('newItemCover').style.display='none',document.getElementById('newItemOption').style.display='none')}}>X</button>
-            
-            <div id='newItemOptionCheck' style={{fontSize:'20px',position:'absolute',left:'40%',top:'30%'}}>
-                <input type="checkbox" value='hasCover' onClick={e=>this.newItemOption(e.target)}/>
-                <label for="newItemOption1"> Cover</label><br/> 
-                    <div style={{display:this.state.hasCover?'block':'none'}} id='imageOption'> 
-                            <input name='imageChoice' className='image_choice' type="radio" value='upload' onClick={e=>this.imageChoice(e.target)}/>
-                            <label for="newItemOption1"> upload image</label><br/>  
-                            <input name='imageChoice' className='image_choice' type="radio" value='urlLink' onClick={e=>this.imageChoice(e.target)}/>
-                            <label for="newItemOption1"> use url link</label><br/>   
-                    </div>
-                <input type="checkbox" value='hasVideo' onClick={e=>this.newItemOption(e.target)}/>
-                <label for="newItemOption1"> Video</label><br/>
-                
-            </div>
-
             
             
-            <Link to={{pathname:'/movie/newItem', state:{s:'hellosz'}}} style={{textDecoration:'none',zIndex:'20',position:'absolute',left:'50%',transform:'translateX(-50%)' , bottom:'10px'}}><button style={{cursor:'pointer',background:'white',display:'inline-flex',justifyContent:'center',alignItems:'center',fontSize:'20px',border:'solid 3px black',height:'40px',width:'80px'}}id='newItem' onClick={()=>(document.getElementById('newItemCover').style.display='none',document.getElementById('newItemOption').style.display='none')} > next </button>
-            </Link>
-        </div>
-    </div>
-    
-)
-
-}
+        )
+    }
 
 
 } 
