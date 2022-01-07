@@ -10,7 +10,7 @@ How to run this project?
 Once everything worked correctly, then you should be able to see the following image(If it doesn't open a webpage automatically,you can open it by type "localhost:3000" in your browser. The test browser is Chrome, so Chorme is recommended):
   ![image](https://user-images.githubusercontent.com/54557154/148615579-8f524208-37d4-47a6-8d24-f680ad561e2e.png)
 
-# What functionalitys does this web app have?
+# What functionalitys does this web app have? (demostration.mp4 is a video demonstration of this app)
 1. Click Sign in, then click "Sign up" and register a new account; (There is no limitation about username and password for now);
 2. Click Sign in and use the account you just registered to log in; (You should be able to see a user icon in the top left spot);
 3. Click user icon and a Setting bar will appear, then click "upload" and fill up the necessary information (Movie_name, Chosen_video, image file /image Url), then upload the movie; (A dialog says "finished" appear means you upload video successfully, the larger file will take longer time, <100 MB should take <10 seconds);
