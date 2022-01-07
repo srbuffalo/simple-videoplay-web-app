@@ -20,6 +20,8 @@ The following image is a demonstration:
 ![image](https://user-images.githubusercontent.com/54557154/148617036-647becce-3b07-45a4-a5ee-d5568cc53273.png)
 ![image](https://user-images.githubusercontent.com/54557154/148617319-afa0241d-0bfb-4422-8d2d-09bb12da3c0a.png)
 
+6. Enter the movie name in "Search Movie" area and click magnifer icon to implement search functionality. 
+
 
 
 
